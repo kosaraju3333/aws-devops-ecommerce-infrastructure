@@ -1,0 +1,28 @@
+flowchart TB
+  Browser[Browser] --> CloudFront[CloudFront HTTPS]
+  CloudFront --> S3[S3 Angular SPA - OAC]
+  Browser --> ALB[Route 53 + ACM + ALB HTTPS]
+  ALB --> Auth[Auth :8001]
+  ALB --> Product[Product :8002]
+  ALB --> Cart[Cart :8003]
+  ALB --> Order[Order :8004]
+  subgraph AWS_DEV_VPC[DEV VPC]
+    subgraph Private_EC2[Private EC2 - Docker network]
+      Auth
+      Product
+      Cart
+      Order
+    end
+    DB[(RDS MySQL - 4 logical DBs)]
+  end
+  Auth --> DB
+  Product --> DB
+  Cart --> DB
+  Order --> DB
+  GHA[GitHub Actions OIDC] --> ECR[ECR]
+  GHA --> SSM[SSM Run Command]
+  SSM --> Private_EC2
+  ECR --> Private_EC2
+  Private_EC2 --> Secrets[Secrets Manager]
+  Private_EC2 --> Logs[CloudWatch Logs]
+  GHA --> Integration[Integration Tests Repository]
